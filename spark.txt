@@ -1,0 +1,33 @@
+sudo adduser spark
+sudo usermod -aG sudo spark
+su - spark
+
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+
+cd ~
+sudo wget https://dlcdn.apache.org/spark/spark-4.0.1/spark-4.0.1-bin-hadoop3.tgz
+tar -xzf spark-4.0.1-bin-hadoop3.tgz
+mv spark-4.0.1-bin-hadoop3 spark
+
+nano ~/.bashrc
+
+(Add to bottom)
+
+export SPARK_HOME=$HOME/spark
+export PATH=$PATH:$SPARK_HOME/bin
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+source ~/.bashrc
+spark-shell --version
+
+mkdir ~/spark-input
+echo "hello spark hello hadoop hello world" > ~/spark-input/text.txt
+
+spark-shell
+
+val textFile = sc.textFile("spark-input/text.txt")
+val counts = textFile.flatMap(line => line.split(" "))
+                     .map(word => (word, 1))
+                     .reduceByKey(_ + _)
+counts.collect().foreach(println)

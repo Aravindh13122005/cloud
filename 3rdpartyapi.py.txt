@@ -1,0 +1,14 @@
+import gradio as gr
+import requests
+
+def get_joke():
+  res = requests.get("https://official-joke-api.appspot.com/random_joke").json()
+  return f"{res['setup']}\n{res['punchline']}"
+
+gr.Interface(
+    fn = get_joke,
+    inputs = None,
+    outputs="text",
+    title="Random Joke App",
+    description="Get a Random joke every time"
+).launch();
