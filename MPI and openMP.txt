@@ -17,7 +17,7 @@ print("Hello from the process {rank} out of {size}")
 openMP:
 sudo apt-get install libomp-dev
 
-gedit hello.cpp
+-----1)gedit hello.cpp
 #include<omp.h>
 #include<iostream>
 int main(){
@@ -32,35 +32,10 @@ return 0;
 
 execution:
 g++ -fopenmp hello.cpp -o hello.out
+./hello.out
 
 
-Method 2:-----------
-
-sudo apt update
-sudo apt-get install libomp-dev
-sudo apt install gcc-y
-gcc-version
-gedit hello.c
-nano hello.c
-gcc -fopenmp hello.c -o hello
-./hello
-
-after gedit hello.c:
----simple helloworldproblem
-#include <omp.h>
-#include <stdio.h>
-int main() {
-    #pragma omp parallel
-    {
-        int threadid = omp_get_thread_num();
-        int totalthreads = omp_get_num_threads();
-        printf("Hello World from thread %d out of %d threads.\n", threadid, totalthreads);
-    }
-
-    return 0;
-}
-
----secondlargest number
+---2)secondlargest number
 #include <iostream>
 #include <vector>
 #include <climits>   // for INT_MIN
@@ -115,39 +90,43 @@ int main() {
     return 0;
 }
 
----simple parallel loop:
-#include <stdio.h>
+---3)simple parallel loop:
+#include <iostream>
 #include <omp.h>
 
 int main() {
+    // Parallel for loop using OpenMP
     #pragma omp parallel for
-    for (int i = 0; i < 8; i++) {
-        printf("Iteration %d is executed by thread %d\n", i, omp_get_thread_num());
+    for (int i = 0; i < 8; ++i) {
+        int thread_id = omp_get_thread_num();
+        std::cout << "Iteration " << i 
+                  << " is executed by thread " << thread_id << std::endl;
     }
 
     return 0;
 }
 
----parallel and serial sum:
-#include <stdio.h>
+
+---4)parallel and serial sum:
+#include <iostream>
 #include <omp.h>
-#include <time.h>
+#include <chrono>
 
 #define THREADCOUNT 5
 
-// Serial sum
-long long serialsum(int n) {
+// Serial sum function
+long long serialSum(int n) {
     long long sum = 0;
-    for (int i = 1; i < n; i++)
+    for (int i = 1; i < n; ++i)
         sum += i;
     return sum;
 }
 
-// Parallel sum
-long long parallelsum(int n) {
+// Parallel sum function
+long long parallelSum(int n) {
     long long sum = 0;
     #pragma omp parallel for reduction(+:sum)
-    for (int i = 1; i < n; i++)
+    for (int i = 1; i < n; ++i)
         sum += i;
     return sum;
 }
@@ -156,22 +135,26 @@ int main() {
     omp_set_num_threads(THREADCOUNT);
     int n = 100000000;
 
-    // Serial sum timing
-    clock_t starttime1 = clock();
-    long long sersum = serialsum(n);
-    clock_t endtime1 = clock();
-    double duration1 = (double)(endtime1 - starttime1) / CLOCKS_PER_SEC;
+    // --- Serial sum timing ---
+    auto start1 = std::chrono::high_resolution_clock::now();
+    long long serial_result = serialSum(n);
+    auto end1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> serial_time = end1 - start1;
 
-    // Parallel sum timing
-    clock_t starttime2 = clock();
-    long long parsum = parallelsum(n);
-    clock_t endtime2 = clock();
-    double duration2 = (double)(endtime2 - starttime2) / CLOCKS_PER_SEC;
+    // --- Parallel sum timing ---
+    auto start2 = std::chrono::high_resolution_clock::now();
+    long long parallel_result = parallelSum(n);
+    auto end2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> parallel_time = end2 - start2;
 
-    printf("Serial sum %lld in %f seconds.\n", sersum, duration1);
-    printf("Parallel sum %lld in %f seconds.\n", parsum, duration2);
+    // --- Output results ---
+    std::cout << "Serial sum:   " << serial_result 
+              << " in " << serial_time.count() << " seconds.\n";
+    std::cout << "Parallel sum: " << parallel_result 
+              << " in " << parallel_time.count() << " seconds.\n";
 
-    return 0;
-
+    return 0;
 }
+
+
 
