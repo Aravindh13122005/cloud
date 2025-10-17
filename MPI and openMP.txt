@@ -1,0 +1,170 @@
+MPI:
+1.sudo apt install python3
+2.sudo apt install -y -qq mpich
+3.sudo apd install python3-pip
+4.pip install mpi4py
+5.gedit mpi_example.py
+6.mpirun -np 4 python3 mpi_example.py
+
+mpi_example.py:
+from mpi4py import MPI
+comm=MPI.COMM_WORLD
+rank=comm.GET_rank()
+size=comm.GET_size()
+print("Hello from the process {rank} out of {size}")
+
+
+openMP:
+sudo apt-get install libomp-dev
+
+gedit hello.cpp
+#include<omp.h>
+#include<iostream>
+int main(){
+omp_set_num_threads(4){
+int thread_id=omp_get_thread_num();
+int threads=omp_get_num_threads();
+std::cout<<"Hello world from "<<thread_id<<" out of "<<threads<<" threads.\n";
+}
+return 0;
+}
+
+
+execution:
+g++ -fopenmp hello.cpp -o hello.out
+
+
+Method 2:-----------
+
+sudo apt update
+sudo apt-get install libomp-dev
+sudo apt install gcc-y
+gcc-version
+gedit hello.c
+nano hello.c
+gcc -fopenmp hello.c -o hello
+./hello
+
+after gedit hello.c:
+---simple helloworldproblem
+#include <omp.h>
+#include <stdio.h>
+int main() {
+    #pragma omp parallel
+    {
+        int threadid = omp_get_thread_num();
+        int totalthreads = omp_get_num_threads();
+        printf("Hello World from thread %d out of %d threads.\n", threadid, totalthreads);
+    }
+
+    return 0;
+}
+
+---secondlargest number
+#include <stdio.h>
+#include <omp.h>
+#include <limits.h>
+
+int main() {
+    int arr[] = {12, 45, 23, 67, 34, 89, 67, 90, 34};
+    int n = sizeof(arr) / sizeof(arr[0]);
+
+    int globalLargest = INT_MIN;
+    int globalSecond = INT_MIN;
+
+    #pragma omp parallel
+    {
+        int localLargest = INT_MIN;
+        int localSecond = INT_MIN;
+
+        #pragma omp for nowait
+        for (int i = 0; i < n; i++) {
+            if (arr[i] > localLargest) {
+                localSecond = localLargest;
+                localLargest = arr[i];
+            } else if (arr[i] > localSecond && arr[i] != localLargest) {
+                localSecond = arr[i];
+            }
+        }
+
+        #pragma omp critical
+        {
+            if (localLargest > globalLargest) {
+                if (globalLargest > localSecond)
+                    globalSecond = globalLargest;
+                else
+                    globalSecond = localSecond;
+                globalLargest = localLargest;
+            } else if (localLargest != globalLargest && localLargest > globalSecond) {
+                globalSecond = localLargest;
+            } else if (localSecond > globalSecond) {
+                globalSecond = localSecond;
+            }
+        }
+    }
+
+    if (globalSecond == INT_MIN)
+        printf("No second largest element exists.\n");
+    else
+        printf("The second largest element is: %d\n", globalSecond);
+
+    return 0;
+}
+---simple parallel loop:
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    #pragma omp parallel for
+    for (int i = 0; i < 8; i++) {
+        printf("Iteration %d is executed by thread %d\n", i, omp_get_thread_num());
+    }
+
+    return 0;
+}
+
+---parallel and serial sum:
+#include <stdio.h>
+#include <omp.h>
+#include <time.h>
+
+#define THREADCOUNT 5
+
+// Serial sum
+long long serialsum(int n) {
+    long long sum = 0;
+    for (int i = 1; i < n; i++)
+        sum += i;
+    return sum;
+}
+
+// Parallel sum
+long long parallelsum(int n) {
+    long long sum = 0;
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 1; i < n; i++)
+        sum += i;
+    return sum;
+}
+
+int main() {
+    omp_set_num_threads(THREADCOUNT);
+    int n = 100000000;
+
+    // Serial sum timing
+    clock_t starttime1 = clock();
+    long long sersum = serialsum(n);
+    clock_t endtime1 = clock();
+    double duration1 = (double)(endtime1 - starttime1) / CLOCKS_PER_SEC;
+
+    // Parallel sum timing
+    clock_t starttime2 = clock();
+    long long parsum = parallelsum(n);
+    clock_t endtime2 = clock();
+    double duration2 = (double)(endtime2 - starttime2) / CLOCKS_PER_SEC;
+
+    printf("Serial sum %lld in %f seconds.\n", sersum, duration1);
+    printf("Parallel sum %lld in %f seconds.\n", parsum, duration2);
+
+    return 0;
+}
