@@ -1,3 +1,10 @@
+MPI:
+1.sudo apt install python3
+2.sudo apt install -y -qq mpich
+3.sudo apd install python3-pip
+4.pip install mpi4py
+5.gedit mpi_example.py
+6.mpirun -np 4 python3 mpi_example.py
 
 mpi_example.py:
 from mpi4py import MPI
@@ -54,35 +61,38 @@ int main() {
 }
 
 ---secondlargest number
-#include <stdio.h>
+#include <iostream>
+#include <vector>
+#include <climits>   // for INT_MIN
 #include <omp.h>
-#include <limits.h>
 
 int main() {
-    int arr[] = {12, 45, 23, 67, 34, 89, 67, 90, 34};
-    int n = sizeof(arr) / sizeof(arr[0]);
+    std::vector<int> arr = {12, 45, 23, 67, 34, 89, 67, 90, 34};
+    std::size_t n = arr.size();
 
     int globalLargest = INT_MIN;
-    int globalSecond = INT_MIN;
+    int globalSecond  = INT_MIN;
 
     #pragma omp parallel
     {
         int localLargest = INT_MIN;
-        int localSecond = INT_MIN;
+        int localSecond  = INT_MIN;
 
         #pragma omp for nowait
-        for (int i = 0; i < n; i++) {
-            if (arr[i] > localLargest) {
+        for (std::size_t i = 0; i < n; ++i) {
+            int val = arr[i];
+            if (val > localLargest) {
                 localSecond = localLargest;
-                localLargest = arr[i];
-            } else if (arr[i] > localSecond && arr[i] != localLargest) {
-                localSecond = arr[i];
+                localLargest = val;
+            } else if (val > localSecond && val != localLargest) {
+                localSecond = val;
             }
         }
 
         #pragma omp critical
         {
             if (localLargest > globalLargest) {
+                // new largest found in this thread
                 if (globalLargest > localSecond)
                     globalSecond = globalLargest;
                 else
@@ -94,15 +104,17 @@ int main() {
                 globalSecond = localSecond;
             }
         }
-    }
+    } // end parallel
 
-    if (globalSecond == INT_MIN)
-        printf("No second largest element exists.\n");
-    else
-        printf("The second largest element is: %d\n", globalSecond);
+    if (globalSecond == INT_MIN) {
+        std::cout << "No second largest element exists.\n";
+    } else {
+        std::cout << "The second largest element is: " << globalSecond << '\n';
+    }
 
     return 0;
 }
+
 ---simple parallel loop:
 #include <stdio.h>
 #include <omp.h>
@@ -162,3 +174,4 @@ int main() {
     return 0;
 
 }
+
